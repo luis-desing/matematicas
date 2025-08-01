@@ -1,0 +1,171 @@
+
+        body {
+            font-family: 'Nunito', Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px 0; /* Añadir padding vertical */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            box-sizing: border-box; /* Incluir padding en cálculos */
+        }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1150px; /* Ajustar max-width si es necesario */
+            margin: 0 auto;
+            background-color: #e0f7fa;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            /* --- Layout Base (Móvil) --- */
+            display: flex;
+            flex-direction: column; /* Apilado por defecto */
+            gap: 20px; /* Espacio entre pizarra y dibujo cuando están apilados */
+            align-items: center; /* Centrar items cuando están apilados */
+        }
+
+        .pizarra, .dibujo {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            /* --- Layout Base (Móvil) --- */
+            width: 100%; /* Ocupar ancho completo */
+            box-sizing: border-box; /* Incluir padding en el ancho */
+            display: flex; /* Usar flex interno para alinear contenido */
+            flex-direction: column;
+            align-items: center; /* Centrar contenido interno */
+        }
+
+        .pizarra {
+            background-color: #2e8b57;
+            color: #fff;
+            /* Opcional: Orden en móvil (si quieres que dibujo vaya primero)
+               order: 2; */
+        }
+
+        .dibujo {
+            background-color: #ffffff;
+            /* Opcional: Orden en móvil
+               order: 1; */
+        }
+
+        h1 {
+            color: #ffeb3b; font-size: 2.2em; margin-bottom: 10px; text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        #operationSelector {
+            margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+        }
+        #operationSelector button {
+            padding: 8px 15px; font-size: 1.5em; font-weight: bold; border: 2px solid #ffeb3b;
+            background-color: rgba(255, 235, 59, 0.5); color: #fff; border-radius: 8px; cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease; min-width: 50px;
+        }
+        #operationSelector button:hover { background-color: rgba(255, 235, 59, 0.7); }
+        #operationSelector button.active-op { background-color: #ffeb3b; color: #2e8b57; border-color: #fff; }
+
+        h2 { color: #333; font-size: 1.8em; margin-bottom: 15px; text-align: center; }
+        h3 { color: #ffeb3b; text-align: center; } /* Para opciones */
+
+        .problema {
+            margin-top: 15px; font-size: 2.5em; display: flex; align-items: center;
+            justify-content: center; flex-wrap: wrap; gap: 5px; text-align: center;
+        }
+        .operador, .igual { margin: 0 8px; font-weight: bold; }
+
+        input[type="number"] {
+            width: 120px; font-size: 1em; padding: 8px; border-radius: 8px;
+            border: 2px solid #ffeb3b; text-align: center;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            -moz-appearance: textfield;
+            user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"].correct-input { border-color: #4caf50; background-color: #e8f5e9; }
+        input[type="number"].incorrect-input { border-color: #f44336; background-color: #ffebee; }
+
+        #verificarBtn {
+            padding: 10px 20px; background-color: #ffeb3b; color: #2e8b57; border: none;
+            border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold;
+            margin-left: 10px; transition: background-color 0.2s ease;
+        }
+        #verificarBtn:hover { background-color: #fdd835; }
+
+        #mensaje {
+            margin-top: 15px; font-size: 1.6em; min-height: 1.2em; color: #ffeb3b;
+            font-weight: bold; display: flex; align-items: center; justify-content: center;
+            text-align: center;
+        }
+        #feedbackIcon { margin-left: 10px; font-size: 1.2em; }
+
+        #score { margin-top: 10px; font-size: 1.2em; color: #ffffff; text-align: center;}
+
+        .number-list {
+            margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 8px; padding: 0 10px; max-width: 400px; /* Limitar ancho de lista de números */
+            margin-left: auto; margin-right: auto; /* Centrar la lista */
+        }
+        .number-list span {
+            display: inline-block; width: 45px; height: 45px; background-color: #ffeb3b;
+            color: #2e8b57; line-height: 45px; text-align: center; border-radius: 8px;
+            cursor: pointer; font-weight: bold;
+            transition: transform 0.1s ease, box-shadow 0.1s ease; touch-action: none;
+        }
+        .number-list span:hover { transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .number-list span.backspace-btn { background-color: #f44336; color: #fff; font-size: 1.2em; }
+
+        .canvas-container {
+            position: relative; margin-top: 15px; text-align: center; width: 100%;
+        }
+        .canvas-container canvas {
+            border: 3px solid #8B4513; border-radius: 10px; background-color: #fff; cursor: crosshair;
+            max-width: 100%; height: auto; display: block; margin: 0 auto 10px auto; touch-action: none;
+        }
+        #borrarCanvasBtn {
+            background-color: #d32f2f; color: #fff; border: none; padding: 10px 20px;
+            border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+        #borrarCanvasBtn:hover { background-color: #c62828; }
+
+        /* --- Media Query para pantallas más anchas (Escritorio) --- */
+        @media screen and (min-width: 769px) {
+            .container {
+                flex-direction: row; /* Lado a lado */
+                justify-content: space-between; /* Espacio entre ellos */
+                align-items: flex-start; /* Alinear arriba si alturas difieren */
+                gap: 25px; /* Espacio lateral entre pizarra y dibujo */
+            }
+
+            .pizarra, .dibujo {
+                flex: 1; /* Compartir espacio equitativamente */
+                /* O usar basis si prefieres proporciones fijas:
+                   flex: 0 1 48%;  (no crecer, encoger, base 48%) */
+                width: auto; /* Anular el width: 100% móvil */
+                /* Opcional: establecer un max-width si no quieres que se hagan demasiado anchos */
+                /* max-width: 550px; */
+            }
+
+            /* Asegurar que el canvas no exceda el contenedor .dibujo */
+             .canvas-container canvas {
+                /* max-width: 100% y height: auto ya están definidos */
+             }
+        }
+
+         /* Ajustes menores para pantallas muy pequeñas si es necesario */
+         @media screen and (max-width: 400px) {
+             h1 { font-size: 1.6em; }
+             .problema { font-size: 1.8em;}
+             #operationSelector button { font-size: 1.2em; }
+             .number-list span { width: 38px; height: 38px; line-height: 38px; }
+             input[type="number"] { width: 100px;}
+         }
