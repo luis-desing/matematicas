@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizarra Mágica de Mates</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px 0; /* Añadir padding vertical */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            box-sizing: border-box; /* Incluir padding en cálculos */
+        }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1150px; /* Ajustar max-width si es necesario */
+            margin: 0 auto;
+            background-color: #e0f7fa;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            /* --- Layout Base (Móvil) --- */
+            display: flex;
+            flex-direction: column; /* Apilado por defecto */
+            gap: 20px; /* Espacio entre pizarra y dibujo cuando están apilados */
+            align-items: center; /* Centrar items cuando están apilados */
+        }
+
+        .pizarra, .dibujo {
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            /* --- Layout Base (Móvil) --- */
+            width: 100%; /* Ocupar ancho completo */
+            box-sizing: border-box; /* Incluir padding en el ancho */
+            display: flex; /* Usar flex interno para alinear contenido */
+            flex-direction: column;
+            align-items: center; /* Centrar contenido interno */
+        }
+
+        .pizarra {
+            background-color: #2e8b57;
+            color: #fff;
+            /* Opcional: Orden en móvil (si quieres que dibujo vaya primero)
+               order: 2; */
+        }
+
+        .dibujo {
+            background-color: #ffffff;
+            /* Opcional: Orden en móvil
+               order: 1; */
+        }
+
+        h1 {
+            color: #ffeb3b; font-size: 2.2em; margin-bottom: 10px; text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        #operationSelector {
+            margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+        }
+        #operationSelector button {
+            padding: 8px 15px; font-size: 1.5em; font-weight: bold; border: 2px solid #ffeb3b;
+            background-color: rgba(255, 235, 59, 0.5); color: #fff; border-radius: 8px; cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease; min-width: 50px;
+        }
+        #operationSelector button:hover { background-color: rgba(255, 235, 59, 0.7); }
+        #operationSelector button.active-op { background-color: #ffeb3b; color: #2e8b57; border-color: #fff; }
+
+        h2 { color: #333; font-size: 1.8em; margin-bottom: 15px; text-align: center; }
+        h3 { color: #ffeb3b; text-align: center; } /* Para opciones */
+
+        .problema {
+            margin-top: 15px; font-size: 2.5em; display: flex; align-items: center;
+            justify-content: center; flex-wrap: wrap; gap: 5px; text-align: center;
+        }
+        .operador, .igual { margin: 0 8px; font-weight: bold; }
+
+        input[type="number"] {
+            width: 120px; font-size: 1em; padding: 8px; border-radius: 8px;
+            border: 2px solid #ffeb3b; text-align: center;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+            -moz-appearance: textfield;
+            user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"].correct-input { border-color: #4caf50; background-color: #e8f5e9; }
+        input[type="number"].incorrect-input { border-color: #f44336; background-color: #ffebee; }
+
+        #verificarBtn {
+            padding: 10px 20px; background-color: #ffeb3b; color: #2e8b57; border: none;
+            border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold;
+            margin-left: 10px; transition: background-color 0.2s ease;
+        }
+        #verificarBtn:hover { background-color: #fdd835; }
+
+        #mensaje {
+            margin-top: 15px; font-size: 1.6em; min-height: 1.2em; color: #ffeb3b;
+            font-weight: bold; display: flex; align-items: center; justify-content: center;
+            text-align: center;
+        }
+        #feedbackIcon { margin-left: 10px; font-size: 1.2em; }
+
+        #score { margin-top: 10px; font-size: 1.2em; color: #ffffff; text-align: center;}
+
+        .number-list {
+            margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 8px; padding: 0 10px; max-width: 400px; /* Limitar ancho de lista de números */
+            margin-left: auto; margin-right: auto; /* Centrar la lista */
+        }
+        .number-list span {
+            display: inline-block; width: 45px; height: 45px; background-color: #ffeb3b;
+            color: #2e8b57; line-height: 45px; text-align: center; border-radius: 8px;
+            cursor: pointer; font-weight: bold;
+            transition: transform 0.1s ease, box-shadow 0.1s ease; touch-action: none;
+        }
+        .number-list span:hover { transform: scale(1.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .number-list span.backspace-btn { background-color: #f44336; color: #fff; font-size: 1.2em; }
+
+        .canvas-container {
+            position: relative; margin-top: 15px; text-align: center; width: 100%;
+        }
+        .canvas-container canvas {
+            border: 3px solid #8B4513; border-radius: 10px; background-color: #fff; cursor: crosshair;
+            max-width: 100%; height: auto; display: block; margin: 0 auto 10px auto; touch-action: none;
+        }
+        #borrarCanvasBtn {
+            background-color: #d32f2f; color: #fff; border: none; padding: 10px 20px;
+            border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+        #borrarCanvasBtn:hover { background-color: #c62828; }
+
+        /* --- Media Query para pantallas más anchas (Escritorio) --- */
+        @media screen and (min-width: 769px) {
+            .container {
+                flex-direction: row; /* Lado a lado */
+                justify-content: space-between; /* Espacio entre ellos */
+                align-items: flex-start; /* Alinear arriba si alturas difieren */
+                gap: 25px; /* Espacio lateral entre pizarra y dibujo */
+            }
+
+            .pizarra, .dibujo {
+                flex: 1; /* Compartir espacio equitativamente */
+                /* O usar basis si prefieres proporciones fijas:
+                   flex: 0 1 48%;  (no crecer, encoger, base 48%) */
+                width: auto; /* Anular el width: 100% móvil */
+                /* Opcional: establecer un max-width si no quieres que se hagan demasiado anchos */
+                /* max-width: 550px; */
+            }
+
+            /* Asegurar que el canvas no exceda el contenedor .dibujo */
+             .canvas-container canvas {
+                /* max-width: 100% y height: auto ya están definidos */
+             }
+        }
+
+         /* Ajustes menores para pantallas muy pequeñas si es necesario */
+         @media screen and (max-width: 400px) {
+             h1 { font-size: 1.6em; }
+             .problema { font-size: 1.8em;}
+             #operationSelector button { font-size: 1.2em; }
+             .number-list span { width: 38px; height: 38px; line-height: 38px; }
+             input[type="number"] { width: 100px;}
+         }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="pizarra">
+            <h1>Pizarra Mágica de Mates</h1>
+            <div id="operationSelector">
+                <button id="opSum" data-op="+">+</button>
+                <button id="opSub" data-op="-">-</button>
+                <button id="opMul" data-op="*">&times;</button>
+                <button id="opDiv" data-op="/">&divide;</button>
+            </div>
+            <div id="score">Puntuación: 0</div>
+            <div class="problema">
+                <span id="num1"></span>
+                <span id="operador"></span>
+                <span id="num2"></span>
+                <span class="igual">=</span>
+                <label for="respuesta" class="sr-only">Escribe tu respuesta aquí</label>
+                <input type="number" id="respuesta">
+                <button id="verificarBtn">Verificar</button>
+            </div>
+            <div id="mensaje"><span id="feedbackIcon"></span></div>
+            <h2>Números (0-9)</h2>
+            <div class="number-list" id="numberList"></div>
+            <div id="opciones" style="display: none;">
+                <h3>¿Cuál es la respuesta correcta?</h3>
+                <div class="number-list" id="opcionesList"></div>
+            </div>
+        </div>
+        <div class="dibujo">
+            <h2>Área de Dibujo</h2>
+            <div class="canvas-container">
+                <canvas id="canvas" width="500" height="400"></canvas>
+                <button id="borrarCanvasBtn">Borrar Dibujo</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // --- El código JavaScript permanece EXACTAMENTE IGUAL que en la versión anterior ---
+        // --- (Variables, funciones: generarProblema, verificar, crearListaNumeros, dibujo, setupEventListeners, etc.) ---
+
+        // --- Variables Globales y Elementos del DOM ---
+        const num1Span = document.getElementById('num1');
+        const num2Span = document.getElementById('num2');
+        const operadorSpan = document.getElementById('operador');
+        const respuestaInput = document.getElementById('respuesta');
+        const mensajeDiv = document.getElementById('mensaje');
+        const feedbackIconSpan = document.getElementById('feedbackIcon');
+        const opcionesDiv = document.getElementById('opciones');
+        const opcionesListDiv = document.getElementById('opcionesList');
+        const numberListDiv = document.getElementById('numberList');
+        const verificarBtn = document.getElementById('verificarBtn');
+        const borrarCanvasBtn = document.getElementById('borrarCanvasBtn');
+        const canvas = document.getElementById('canvas');
+        // Añadir chequeo por si canvas no existe o no soporta 2d
+        const ctx = canvas?.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const operationSelectorDiv = document.getElementById('operationSelector');
+        const opButtons = operationSelectorDiv.querySelectorAll('button');
+
+        let currentCorrectAnswer = 0;
+        let drawing = false;
+        let correctAnswersCount = 0;
+        let currentOperation = '+';
+
+        // --- Funciones Principales ---
+        function generarProblema() {
+             let num1, num2;
+             const maxAddSub = 20;
+             const maxMul = 12;
+             const maxDivResult = 10;
+             const maxDivisor = 10;
+
+             switch (currentOperation) {
+                 case '+':
+                     num1 = Math.floor(Math.random() * (maxAddSub + 1));
+                     num2 = Math.floor(Math.random() * (maxAddSub + 1));
+                     currentCorrectAnswer = num1 + num2;
+                     operadorSpan.textContent = '+';
+                     break;
+                 case '-':
+                     num1 = Math.floor(Math.random() * (maxAddSub + 1));
+                     num2 = Math.floor(Math.random() * (num1 + 1)); // num2 <= num1
+                     currentCorrectAnswer = num1 - num2;
+                     operadorSpan.textContent = '-';
+                     break;
+                 case '*':
+                     num1 = Math.floor(Math.random() * (maxMul + 1));
+                     num2 = Math.floor(Math.random() * (maxMul + 1));
+                     currentCorrectAnswer = num1 * num2;
+                     operadorSpan.textContent = '×';
+                     break;
+                 case '/':
+                     const result = Math.max(1, Math.floor(Math.random() * (maxDivResult + 1))); // Resultado al menos 1
+                     num2 = Math.max(1, Math.floor(Math.random() * maxDivisor)); // Divisor al menos 1
+                     num1 = result * num2;
+                     currentCorrectAnswer = result;
+                     operadorSpan.textContent = '÷';
+                     break;
+             }
+
+             num1Span.textContent = num1;
+             num2Span.textContent = num2;
+             respuestaInput.value = '';
+             respuestaInput.classList.remove('correct-input', 'incorrect-input');
+             // Evitar error si respuestaInput no existe
+             respuestaInput?.focus();
+             mensajeDiv.textContent = '';
+             feedbackIconSpan.textContent = '';
+             opcionesDiv.style.display = 'none';
+         }
+
+        function verificar() {
+             // Comprobar si respuestaInput existe
+             if (!respuestaInput) return;
+
+             const respuestaTexto = respuestaInput.value;
+             const respuestaUsuario = parseInt(respuestaTexto);
+
+             respuestaInput.classList.remove('correct-input', 'incorrect-input');
+
+             if (respuestaTexto.trim() === '' || isNaN(respuestaUsuario)) {
+                  mensajeDiv.textContent = 'Escribe un número.';
+                  feedbackIconSpan.textContent = '❓';
+                  return;
+             }
+
+             if (respuestaUsuario === currentCorrectAnswer) {
+                 mensajeDiv.textContent = '¡Correcto!';
+                 feedbackIconSpan.textContent = '👍';
+                 respuestaInput.classList.add('correct-input');
+                 correctAnswersCount++;
+                 actualizarScore();
+                 setTimeout(generarProblema, 1500);
+             } else {
+                 mensajeDiv.textContent = '¡Uy! Intenta de nuevo.';
+                 feedbackIconSpan.textContent = '❌';
+                 respuestaInput.classList.add('incorrect-input');
+             }
+         }
+
+        function actualizarScore() {
+             if (scoreElement) {
+                scoreElement.textContent = `Puntuación: ${correctAnswersCount}`;
+             }
+         }
+
+        function selectOperation(selectedButton) {
+              currentOperation = selectedButton.dataset.op;
+              opButtons.forEach(btn => btn.classList.remove('active-op'));
+              selectedButton.classList.add('active-op');
+              generarProblema();
+         }
+
+        function crearListaNumeros() {
+            if (!numberListDiv || !respuestaInput) return; // Salir si no existen
+
+            numberListDiv.innerHTML = '';
+            for (let i = 0; i <= 9; i++) {
+                const span = document.createElement('span');
+                span.textContent = i;
+                span.draggable = true;
+
+                span.addEventListener('dragstart', (event) => {
+                    event.dataTransfer.setData('text/plain', i.toString());
+                    event.dataTransfer.effectAllowed = "copy";
+                });
+
+                span.addEventListener('click', () => {
+                    respuestaInput.value += i;
+                    respuestaInput.focus();
+                    respuestaInput.classList.remove('correct-input', 'incorrect-input');
+                });
+
+                numberListDiv.appendChild(span);
+            }
+            const backspaceSpan = document.createElement('span');
+            backspaceSpan.innerHTML = '&#9003;';
+            backspaceSpan.classList.add('backspace-btn');
+            backspaceSpan.addEventListener('click', () => {
+                respuestaInput.value = respuestaInput.value.slice(0, -1);
+                respuestaInput.focus();
+            });
+            numberListDiv.appendChild(backspaceSpan);
+        }
+
+
+        // --- Funciones de Dibujo ---
+        function borrarCanvas() {
+            // Comprobar si ctx existe
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function getCoords(event) {
+            if (!canvas) return { x: 0, y: 0 }; // Devolver 0 si no hay canvas
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            if (event.touches && event.touches.length > 0) {
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else {
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            const x = (clientX - rect.left) * (canvas.width / rect.width);
+            const y = (clientY - rect.top) * (canvas.height / rect.height);
+            return { x, y };
+        }
+
+
+        function startDrawing(event) {
+            if (!ctx) return; // Salir si no hay contexto
+            if (event.cancelable) event.preventDefault();
+            drawing = true;
+            const { x, y } = getCoords(event);
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function stopDrawing(event) {
+            if (event.cancelable) event.preventDefault();
+            if (drawing) {
+                drawing = false;
+            }
+        }
+
+        function draw(event) {
+            if (!drawing || !ctx) return; // Salir si no se está dibujando o no hay contexto
+            if (event.cancelable) event.preventDefault();
+
+            const { x, y } = getCoords(event);
+
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#333';
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+
+         // --- Configuración de Event Listeners ---
+         function setupEventListeners() {
+            // Comprobar existencia de elementos antes de añadir listeners
+            verificarBtn?.addEventListener('click', verificar);
+            borrarCanvasBtn?.addEventListener('click', borrarCanvas);
+            opButtons?.forEach(button => {
+                button.addEventListener('click', () => selectOperation(button));
+            });
+
+            if (respuestaInput) {
+                respuestaInput.addEventListener('dragover', (event) => {
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = "copy";
+                });
+                respuestaInput.addEventListener('drop', (event) => {
+                    event.preventDefault();
+                    const numero = event.dataTransfer.getData('text/plain');
+                    if (!isNaN(numero) && numero !== null && numero.trim() !== '') {
+                        respuestaInput.value += numero;
+                        respuestaInput.classList.remove('correct-input', 'incorrect-input');
+                    }
+                });
+                respuestaInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        verificar();
+                    }
+                });
+            }
+
+            if (canvas) {
+                canvas.addEventListener('pointerdown', startDrawing);
+                canvas.addEventListener('pointerup', stopDrawing);
+                canvas.addEventListener('pointermove', draw);
+                canvas.addEventListener('pointerleave', stopDrawing);
+                canvas.addEventListener('pointercancel', stopDrawing);
+            }
+         }
+
+
+        // --- Inicialización ---
+        window.onload = () => {
+            // Comprobar si los elementos esenciales existen antes de proceder
+             if (!document.getElementById('opSum') || !numberListDiv || !scoreElement || !canvas || !ctx) {
+                console.error("Error: No se encontraron algunos elementos esenciales del DOM. La aplicación no puede inicializarse correctamente.");
+                // Opcionalmente, mostrar un mensaje al usuario en el HTML
+                // document.body.innerHTML = "<p>Error al cargar la aplicación. Faltan componentes.</p>";
+                return; // Detener la ejecución si falta algo crítico
+            }
+
+            setupEventListeners();
+            document.getElementById('opSum').classList.add('active-op');
+            crearListaNumeros();
+            generarProblema();
+            actualizarScore();
+        };
+    </script>
+</body>
+</html>
