@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Color de la interfaz del navegador (mejora UX móvil) -->
+    <meta name="theme-color" content="#2e8b57">
     <title>Pizarra Mágica de Mates</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,41 +12,53 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <main class="container">
         <div class="pizarra">
-            <h1>Pizarra Mágica de Mates</h1>
+            <header>
+                <h1>Pizarra Mágica de Mates</h1>
+                <div id="score">Puntuación: 0</div>
+            </header>
+
             <div id="operationSelector">
-                <button id="opSum" data-op="+">+</button>
+                <button id="opSum" data-op="+" class="active-op">+</button>
                 <button id="opSub" data-op="-">-</button>
                 <button id="opMul" data-op="*">&times;</button>
                 <button id="opDiv" data-op="/">&divide;</button>
             </div>
-            <div id="score">Puntuación: 0</div>
-            <div class="problema">
-                <span id="num1"></span>
-                <span id="operador"></span>
-                <span id="num2"></span>
-                <span class="igual">=</span>
-                <label for="respuesta" class="sr-only">Escribe tu respuesta aquí</label>
-                <input type="number" id="respuesta">
-                <button id="verificarBtn">Verificar</button>
+
+            <div class="problema-container">
+                <div class="problema">
+                    <span id="num1"></span>
+                    <span id="operador"></span>
+                    <span id="num2"></span>
+                    <span class="igual">=</span>
+                </div>
+                <div class="respuesta-container">
+                    <label for="respuesta" class="sr-only">Escribe tu respuesta aquí</label>
+                    <input type="text" id="respuesta" inputmode="numeric" readonly>
+                    <button id="verificarBtn">Verificar</button>
+                </div>
             </div>
+
             <div id="mensaje"><span id="feedbackIcon"></span></div>
-            <h2>Números (0-9)</h2>
-            <div class="number-list" id="numberList"></div>
-            <div id="opciones" style="display: none;">
-                <h3>¿Cuál es la respuesta correcta?</h3>
-                <div class="number-list" id="opcionesList"></div>
+
+            <div class="teclado">
+                <h2>Toca los números</h2>
+                <div class="number-list" id="numberList"></div>
             </div>
         </div>
+
         <div class="dibujo">
-            <h2>Área de Dibujo</h2>
-            <div class="canvas-container">
+            <div class="dibujo-header">
+                <h2>Área de Dibujo</h2>
+                <p>(Sólo en pantallas grandes)</p>
+            </div>
+            <div class="canvas-controls">
                 <canvas id="canvas" width="500" height="400"></canvas>
-                <button id="borrarCanvasBtn">Borrar Dibujo</button>
+                <button id="borrarCanvasBtn">Borrar</button>
             </div>
         </div>
-    </div>
+    </main>
     <script src="script.js"></script>
 </body>
 </html>
