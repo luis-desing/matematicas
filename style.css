@@ -11,6 +11,7 @@
     --incorrect-color: #d9534f;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --font-family: 'Nunito', Arial, sans-serif;
+    --warning-color: #ff9800;
 }
 
 *,
@@ -74,13 +75,64 @@ h1 {
     text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
 }
 
-#score {
-    font-size: 1.25rem;
-    font-weight: 700;
+.score-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     margin-top: 0.5rem;
+}
+
+#score, #highScore, .timer {
+    font-size: 1.1rem;
+    font-weight: 700;
     background-color: rgba(0,0,0,0.2);
     padding: 0.25rem 0.75rem;
     border-radius: 999px;
+    display: inline-block;
+}
+
+.timer-warning {
+    background-color: rgba(255, 152, 0, 0.3) !important;
+    color: var(--warning-color) !important;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Selectores de Modo y Dificultad */
+.game-mode-selector, .difficulty-selector {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.mode-btn, .difficulty-btn {
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: 2px solid var(--accent-color);
+    background-color: transparent;
+    color: var(--accent-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.mode-btn:hover, .difficulty-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.mode-btn.active-mode, .difficulty-btn.active-difficulty {
+    background-color: var(--accent-color);
+    color: var(--accent-text);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 #operationSelector {
@@ -210,9 +262,16 @@ h1 {
 
 .teclado h2 {
     font-size: 1.2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     color: var(--pizarra-text);
     opacity: 0.9;
+}
+
+.keyboard-hint {
+    font-size: 0.8rem;
+    color: var(--pizarra-text);
+    opacity: 0.7;
+    margin-bottom: 1rem;
 }
 
 .number-list {
@@ -234,13 +293,20 @@ h1 {
     transition: all 0.2s ease;
     -webkit-user-select: none; user-select: none;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    outline: none;
 }
 
-.number-list span:hover {
+.number-list span:hover,
+.number-list span:focus {
     background-color: var(--accent-color);
     color: var(--accent-text);
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.number-list span:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
 }
 
 .number-list span.backspace-btn {
@@ -340,5 +406,14 @@ canvas {
     #operationSelector button, .number-list span {
         width: 48px;
         height: 48px;
+    }
+
+    .game-mode-selector, .difficulty-selector {
+        gap: 0.25rem;
+    }
+
+    .mode-btn, .difficulty-btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
     }
 }

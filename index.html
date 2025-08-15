@@ -16,8 +16,25 @@
         <div class="pizarra">
             <header>
                 <h1>Pizarra Mágica de Mates</h1>
-                <div id="score">Puntuación: 0</div>
+                <div class="score-container">
+                    <div id="score">Puntuación: 0</div>
+                    <div id="highScore">Mejor: 0</div>
+                    <div id="timer" class="timer">Tiempo: --</div>
+                </div>
             </header>
+
+            <!-- Selector de Modo de Juego -->
+            <div id="gameModeSelector" class="game-mode-selector">
+                <button class="mode-btn active-mode" data-mode="practice">Práctica</button>
+                <button class="mode-btn" data-mode="timed">Contra Reloj</button>
+            </div>
+
+            <!-- Selector de Dificultad -->
+            <div id="difficultySelector" class="difficulty-selector">
+                <button class="difficulty-btn active-difficulty" data-difficulty="easy">Fácil</button>
+                <button class="difficulty-btn" data-difficulty="medium">Medio</button>
+                <button class="difficulty-btn" data-difficulty="hard">Difícil</button>
+            </div>
 
             <div id="operationSelector">
                 <button id="opSum" data-op="+" class="active-op">+</button>
@@ -44,6 +61,7 @@
 
             <div class="teclado">
                 <h2>Toca los números</h2>
+                <p class="keyboard-hint">(También puedes usar el teclado físico)</p>
                 <div class="number-list" id="numberList"></div>
             </div>
         </div>

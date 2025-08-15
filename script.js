@@ -25,6 +25,108 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentOperation = '+';
     let drawing = false;
     let ctx = null;
+    let timer = null;
+    let timeLeft = 30; // 30 segundos por problema
+    let difficulty = 'easy'; // easy, medium, hard
+    let gameMode = 'practice'; // practice, timed
+    let highScore = localStorage.getItem('mathHighScore') || 0;
+
+    // --- Configuración de Dificultad ---
+    const difficultyConfig = {
+        easy: {
+            maxAddSub: 20,
+            maxMul: 12,
+            maxDivResult: 10,
+            maxDivisor: 10,
+            timeLimit: 45
+        },
+        medium: {
+            maxAddSub: 50,
+            maxMul: 20,
+            maxDivResult: 20,
+            maxDivisor: 15,
+            timeLimit: 30
+        },
+        hard: {
+            maxAddSub: 100,
+            maxMul: 25,
+            maxDivResult: 50,
+            maxDivisor: 25,
+            timeLimit: 20
+        }
+    };
+
+    // --- Sistema de Sonidos ---
+    const playSound = (type) => {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if (type === 'correct') {
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+            } else if (type === 'incorrect') {
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(150, audioContext.currentTime + 0.1);
+            }
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (error) {
+            console.log('Audio no soportado en este navegador');
+        }
+    };
+
+    // --- Sistema de Timer ---
+    const startTimer = () => {
+        if (gameMode !== 'timed') return;
+        
+        timeLeft = difficultyConfig[difficulty].timeLimit;
+        updateTimerDisplay();
+        
+        timer = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                timeUp();
+            }
+        }, 1000);
+    };
+
+    const updateTimerDisplay = () => {
+        const timerElement = getEl('timer');
+        if (timerElement) {
+            timerElement.textContent = `Tiempo: ${timeLeft}s`;
+            timerElement.className = timeLeft <= 5 ? 'timer-warning' : 'timer';
+        }
+    };
+
+    const timeUp = () => {
+        mensajeDiv.textContent = '¡Se acabó el tiempo!';
+        feedbackIconSpan.textContent = '⏰';
+        respuestaInput.classList.add('incorrect-input');
+        playSound('incorrect');
+        
+        setTimeout(() => {
+            generarProblema();
+        }, 2000);
+    };
+
+    const stopTimer = () => {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+    };
 
     // --- Lógica de Dibujo ---
     const setupCanvas = () => {
@@ -79,28 +181,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Lógica del Juego ---
     const generarProblema = () => {
+        stopTimer();
+        
         let num1, num2;
-        const maxAddSub = 20;
-        const maxMul = 12;
-        const maxDivResult = 10;
-        const maxDivisor = 10;
+        const config = difficultyConfig[difficulty];
 
         switch (currentOperation) {
             case '+':
-                num1 = Math.floor(Math.random() * (maxAddSub + 1));
-                num2 = Math.floor(Math.random() * (maxAddSub + 1));
+                num1 = Math.floor(Math.random() * (config.maxAddSub + 1));
+                num2 = Math.floor(Math.random() * (config.maxAddSub + 1));
                 break;
             case '-':
-                num1 = Math.floor(Math.random() * (maxAddSub + 1));
+                num1 = Math.floor(Math.random() * (config.maxAddSub + 1));
                 num2 = Math.floor(Math.random() * (num1 + 1));
                 break;
             case '*':
-                num1 = Math.floor(Math.random() * (maxMul + 1));
-                num2 = Math.floor(Math.random() * (maxMul + 1));
+                num1 = Math.floor(Math.random() * (config.maxMul + 1));
+                num2 = Math.floor(Math.random() * (config.maxMul + 1));
                 break;
             case '/':
-                const result = Math.max(1, Math.floor(Math.random() * maxDivResult));
-                num2 = Math.max(1, Math.floor(Math.random() * maxDivisor));
+                const result = Math.max(1, Math.floor(Math.random() * config.maxDivResult));
+                num2 = Math.max(1, Math.floor(Math.random() * config.maxDivisor));
                 num1 = result * num2;
                 break;
         }
@@ -111,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         operadorSpan.textContent = currentOperation === '*' ? '×' : currentOperation;
         
         resetInput();
+        startTimer();
     };
 
     const resetInput = () => {
@@ -130,21 +232,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (respuestaUsuario === currentCorrectAnswer) {
+            stopTimer();
             mensajeDiv.textContent = '¡Correcto!';
             feedbackIconSpan.textContent = '👍';
             respuestaInput.classList.add('correct-input');
             correctAnswersCount++;
             actualizarScore();
+            playSound('correct');
+            
+            // Actualizar high score
+            if (correctAnswersCount > highScore) {
+                highScore = correctAnswersCount;
+                localStorage.setItem('mathHighScore', highScore);
+                actualizarHighScore();
+            }
+            
             setTimeout(generarProblema, 1200);
         } else {
             mensajeDiv.textContent = '¡Uy! Intenta de nuevo.';
             feedbackIconSpan.textContent = '❌';
             respuestaInput.classList.add('incorrect-input');
+            playSound('incorrect');
         }
     };
 
     const actualizarScore = () => {
         scoreElement.textContent = `Puntuación: ${correctAnswersCount}`;
+    };
+
+    const actualizarHighScore = () => {
+        const highScoreElement = getEl('highScore');
+        if (highScoreElement) {
+            highScoreElement.textContent = `Mejor: ${highScore}`;
+        }
     };
 
     const selectOperation = (selectedButton) => {
@@ -154,18 +274,60 @@ document.addEventListener('DOMContentLoaded', () => {
         generarProblema();
     };
 
+    const cambiarDificultad = (newDifficulty) => {
+        difficulty = newDifficulty;
+        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+        difficultyButtons.forEach(btn => {
+            btn.classList.remove('active-difficulty');
+            if (btn.dataset.difficulty === newDifficulty) {
+                btn.classList.add('active-difficulty');
+            }
+        });
+        generarProblema();
+    };
+
+    const cambiarModo = (newMode) => {
+        gameMode = newMode;
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        modeButtons.forEach(btn => {
+            btn.classList.remove('active-mode');
+            if (btn.dataset.mode === newMode) {
+                btn.classList.add('active-mode');
+            }
+        });
+        generarProblema();
+    };
+
     const crearTeclado = () => {
         numberListDiv.innerHTML = ''; // Limpiar teclado existente
         for (let i = 0; i <= 9; i++) {
             const span = document.createElement('span');
             span.textContent = i;
+            span.setAttribute('tabindex', '0');
+            span.setAttribute('role', 'button');
+            span.setAttribute('aria-label', `Número ${i}`);
             span.addEventListener('click', () => appendToResponse(i));
+            span.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    appendToResponse(i);
+                }
+            });
             numberListDiv.appendChild(span);
         }
         const backspaceSpan = document.createElement('span');
         backspaceSpan.innerHTML = '&#9003;';
         backspaceSpan.classList.add('backspace-btn');
+        backspaceSpan.setAttribute('tabindex', '0');
+        backspaceSpan.setAttribute('role', 'button');
+        backspaceSpan.setAttribute('aria-label', 'Borrar');
         backspaceSpan.addEventListener('click', backspace);
+        backspaceSpan.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                backspace();
+            }
+        });
         numberListDiv.appendChild(backspaceSpan);
     };
 
@@ -199,11 +361,33 @@ document.addEventListener('DOMContentLoaded', () => {
             button.addEventListener('click', () => selectOperation(button));
         });
 
+        // Event listeners para modo de juego
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        modeButtons.forEach(button => {
+            button.addEventListener('click', () => cambiarModo(button.dataset.mode));
+        });
+
+        // Event listeners para dificultad
+        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+        difficultyButtons.forEach(button => {
+            button.addEventListener('click', () => cambiarDificultad(button.dataset.difficulty));
+        });
+
         // Permitir verificar con la tecla Enter
         document.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
                 verificar();
+            }
+            
+            // Números del teclado físico
+            if (event.key >= '0' && event.key <= '9') {
+                appendToResponse(parseInt(event.key));
+            }
+            
+            // Backspace
+            if (event.key === 'Backspace') {
+                backspace();
             }
         });
 
@@ -232,6 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         handleResize(); // Comprobar tamaño de pantalla al cargar
         generarProblema();
         actualizarScore();
+        actualizarHighScore();
     };
 
     init();
